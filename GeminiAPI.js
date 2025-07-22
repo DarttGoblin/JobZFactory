@@ -21,6 +21,7 @@ async function matchCVtoOffer(cvContent, offerContent) {
     //     Respond only with a number from 0 to 100.
     // `;
 
+    // update bach tkun response kat returni more info
     const prompt = `
         You are an intelligent job matching assistant.
 
@@ -29,7 +30,6 @@ async function matchCVtoOffer(cvContent, offerContent) {
         - experience_match
         - projects_match
         - skills_match
-        - overall_match (a weighted or averaged score based on the previous 3)
 
         Do not include any explanation, comments, or additional text. Return ONLY the JSON object.
 
@@ -99,7 +99,6 @@ We are hiring a Data Scientist with at least 5 years of experience in Python, ma
 Knowledge of TensorFlow, Docker, and Kubernetes is highly preferred.
 `;
 
-// Example tani: matching habt, cv designer / offer backend
 const cv2 = `
 {
   "identite": {
