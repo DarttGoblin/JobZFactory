@@ -93,7 +93,7 @@ const cv1 = `
 const offer1 = `
   Looking for a Backend Developer experienced in Java, Spring Boot, and SQL databases.
   The ideal candidate should have experience in API development and cloud deployments.
-`;
+`; // turn this into a json
 
 const cv2 = `
 {
