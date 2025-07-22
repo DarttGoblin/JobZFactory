@@ -4,24 +4,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-async function matchCVtoOffer(cvContent, offerContent) {
-    // hada aykun huwa lprompt li ayt senda, expecting lpourcentage only!
-    // const prompt = `
-    //     You are a job matching assistant.
-    //     Evaluate the following CV content and job offer content.
-    //     Return ONLY the matching percentage as a number between 0 and 100, nothing else.
-
-    //     CV:
-    //     ${cvContent}
-
-    //     JOB OFFER:
-    //     ${offerContent}
-
-    //     How well does this CV match the job offer? 
-    //     Respond only with a number from 0 to 100.
-    // `;
-
-    // update bach tkun response kat returni more info
+async function matchCVtoOffer(cvContent, offerContent, threshold = 50) {
     const prompt = `
         You are an intelligent job matching assistant.
 
@@ -40,20 +23,33 @@ async function matchCVtoOffer(cvContent, offerContent) {
         ${offerContent}
 
         Evaluate and return the result.
-        `;
+    `;
 
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const output = response.text().trim();
-        console.log("Matching Percentage:", output);
+        let output = response.text().trim();
+
+        // Remove markdown-style code block if present
+        if (output.startsWith("```")) {
+            output = output.replace(/```(json)?\s*/i, '').replace(/```$/, '').trim();
+        }
+
+        const scores = JSON.parse(output);
+        const average =
+            (scores.experience_match + scores.projects_match + scores.skills_match) / 3;
+
+        const decision = average >= threshold ? 'ACCEPTED' : 'REJECTED';
+
+        console.log("Evaluation:", scores);
+        console.log("Average Score:", average.toFixed(2));
+        console.log("Decision:", decision);
     } catch (error) {
         console.error("Error:", error);
     }
 }
 
-// Example lowl: lmatching tal3, cd data scentist / offer data scientist 
 const cv1 = `
 {
   "identite": {
@@ -95,8 +91,8 @@ const cv1 = `
 }
 `;
 const offer1 = `
-We are hiring a Data Scientist with at least 5 years of experience in Python, machine learning, and NLP.
-Knowledge of TensorFlow, Docker, and Kubernetes is highly preferred.
+  Looking for a Backend Developer experienced in Java, Spring Boot, and SQL databases.
+  The ideal candidate should have experience in API development and cloud deployments.
 `;
 
 const cv2 = `
@@ -147,10 +143,79 @@ const cv2 = `
   "centres_interet": []
 }
 `;
+
 const offer2 = `
-Looking for a Backend Developer experienced in Java, Spring Boot, and SQL databases.
-The ideal candidate should have experience in API development and cloud deployments.
+We are hiring a Data Scientist with at least 5 years of experience in Python, machine learning, and NLP.
+Knowledge of TensorFlow, Docker, and Kubernetes is highly preferred.
 `;
 
+const cv3 = `
+  {
+  "identite": {
+    "nom": "Sara El Amrani",
+    "email": "sara.amrani@gmail.com",
+    "telephone": "+212 654321987",
+    "adresse": "Marrakech, Morocco",
+    "linkedin": "saraelamrani",
+    "github": "sara-ai",
+    "portfolio": "saraelamrani.dev"
+  },
+  "profil": "Master's student in Artificial Intelligence with hands-on experience in machine learning, deep learning, and web development. Passionate about solving real-world problems with data-driven solutions.",
+  "langues": ["Arabic: Native", "English: Fluent", "French: Good"],
+  "competences": {
+    "programmation": ["Python", "TensorFlow", "Scikit-learn", "PyTorch", "JavaScript", "Node.js"],
+    "web": ["HTML", "CSS", "React"],
+    "base_de_donnees": ["SQL", "MongoDB"],
+    "systèmes": ["Raspberry Pi", "Arduino"],
+    "modelisation": ["UML", "ERD"],
+    "autres": ["Docker", "Git"]
+  },
+  "formations": [
+    {
+      "titre": "Master in Artificial Intelligence",
+      "date_debut": "2024",
+      "date_fin": "2026",
+      "lieu": "Faculty of Science Semlalia | Marrakesh"
+    },
+    {
+      "titre": "Bachelor in Computer Science",
+      "date_debut": "2021",
+      "date_fin": "2024",
+      "lieu": "Faculty of Science Semlalia | Marrakesh"
+    }
+  ],
+  "experiences": [
+    {
+      "poste": "AI Intern",
+      "entreprise": "AI Lab Morocco",
+      "duree": "March 2024 - June 2024",
+      "description": "Worked on image classification and NLP projects using TensorFlow and Hugging Face Transformers."
+    }
+  ],
+  "projets": [
+    {
+      "titre": "Smart Health Assistant",
+      "date_debut": "2024",
+      "description": "Built a medical chatbot powered by GPT and integrated with a React frontend and Flask backend."
+    }
+  ],
+  "centres_interet": ["AI Ethics", "Open Source", "UI/UX Design"]
+}
+`
+
+const offer3 = `
+We are seeking a Junior Machine Learning Engineer with strong foundations in Python and hands-on experience with deep learning frameworks like TensorFlow or PyTorch.
+
+Requirements:
+- Knowledge of Scikit-learn, Transformers (Hugging Face), and data preprocessing techniques.
+- Familiarity with REST APIs and web frameworks.
+- Experience with version control (Git) and deployment tools (Docker).
+- Strong interest in AI-driven healthcare or NLP applications is a plus.
+
+Location: Remote/Morocco preferred
+
+`
+
 // matchCVtoOffer(cv1, offer1);
-matchCVtoOffer(cv2, offer2);
+// matchCVtoOffer(cv2, offer2);
+matchCVtoOffer(cv3, offer3);
