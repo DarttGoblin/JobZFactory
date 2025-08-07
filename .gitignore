@@ -1,0 +1,6 @@
+node_modules/
+files/
+.env
+phase1_functions.py
+phase1_main.py
+phase2.py
